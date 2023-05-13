@@ -108,7 +108,7 @@ with tab1:
             movieID_userID_df, user, num_movies)
 
         with st.expander("Show me the movies I watched"):
-            movie_cols = st.columns(len(list_of_user_watched_movies))
+            movie_cols = st.columns(10)
             get_watched_movies_info(
                 list_of_user_watched_movies, movies_df, movie_cols)
 

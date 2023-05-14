@@ -99,3 +99,12 @@ def recommend_movies_by_userId(df, user, num_recommended_movies):
         rank = rank + 1
 
     return list_of_user_watched_movies, list_of_recommended_movies
+
+
+def give_recommendations_with_contentBased(index, cos_sim_data, data, num_movies=10):
+    index_recomm = cos_sim_data.loc[index].sort_values(
+        ascending=False).index.tolist()[0:num_movies]
+    index = [int(i) for i in index_recomm]
+    movies_recomm = data['title'].loc[index].values
+    movies_recomm_genres = data['genres'].loc[index].values
+    return movies_recomm, index_recomm, movies_recomm_genres

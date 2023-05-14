@@ -8,7 +8,7 @@ import requests
 import seaborn as sns
 from streamlit_lottie import st_lottie
 import pickle
-from ItemBasedCF import recommend_movies_by_userId
+from Functions import recommend_movies_by_userId, give_recommendations_with_contentBased
 import movieposters as mp
 
 st.set_page_config(page_title='Movie Recommendation System',
@@ -112,11 +112,51 @@ with tab1:
             get_watched_movies_info(
                 list_of_user_watched_movies, movies_df, movie_cols)
 
-        with st.expander("Top 10 Suggestions"):
+        with st.expander("Top Suggestions"):
             movie_cols = st.columns(num_movies)
             show_recommended_movie_info(
                 list_of_recommended_movies, movie_cols, movies_df)
 
 with tab2:
-    st.markdown("<h3 style='text-align: center; color: black;'>Content-Based Recommender System</h3>",
-                unsafe_allow_html=True)
+    cos_sim_data = pd.read_csv("cos_sim_data.csv")
+    movies_df = pd.read_csv('../02-Code/movies.csv')
+    movies_names = movies_df['title'].tolist()
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        selected_movie = st.selectbox('Select a movie', movies_names)
+    with col2:
+        movies_num = int(st.slider(
+            'Select the number of movies to recommend based on the movie you selected', 1, 20, 10))
+
+    if st.button('Show recommended the movies'):
+        index_of_selected_movie = int(movies_df[movies_df['title']
+                                                == selected_movie]["movieId"])
+        movies_titles, movies_id, movies_genres = give_recommendations_with_contentBased(
+            index_of_selected_movie, cos_sim_data, movies_df, movies_num)
+        with st.expander("Movie Info"):
+            movie_name, movie_genres = retrieve_movie_name_genres(
+                index_of_selected_movie, movies_df)
+            col1, col2 = st.columns([1, 1])
+            with col2:
+                st.image(mp.get_poster(title=movie_name),
+                         caption="Movie Poster", width=200)
+            with col1:
+                st.write("Movie Name: "+movie_name)
+                st.write("Movie Genres: "+movie_genres)
+
+        with st.expander("Suggestions"):
+            movie_cols = st.columns(movies_num)
+            movies_poster_links = []
+            for i in movies_titles:
+                try:
+                    link = mp.get_poster(title=i)
+                    movies_poster_links.append(link)
+                except:
+                    movies_poster_links.append(
+                        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoWcWg0E8pSjBNi0TtiZsqu8uD2PAr_K11DA&usqp=CAU")
+            for c, i, t, p, g in zip(movie_cols, movies_id, movies_titles, movies_poster_links, movies_genres):
+                with c:
+                    st.image(p)
+                    st.write(t)
+                    st.write("Movie ID: "+str(i))
+                    st.write("Genres: "+g)
